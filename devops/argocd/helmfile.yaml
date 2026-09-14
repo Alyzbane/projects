@@ -1,0 +1,19 @@
+helmDefaults:
+  wait: true
+  waitForJobs: true
+  createNamespace: true
+
+repositories:
+  - name: argocd
+    url: https://argoproj.github.io/argo-helm
+
+releases:
+  - name: argocd
+    namespace: argocd
+    chart: argo/argo-cd
+    version: "8.1.2"
+    values:
+      - dex:
+          enabled: false
+        notifications:
+          enabled: false

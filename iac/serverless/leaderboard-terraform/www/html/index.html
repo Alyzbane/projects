@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leaderboard</title>
+<script src="env.js"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<style>
+  :root{
+    --black:#111;
+    --gray-1:#666;
+    --gray-2:#999;
+    --line:#ddd;
+    --bg:#fff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--black);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+  }
+  .num{font-family:"SF Mono",Menlo,Consolas,monospace}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 64px}
+
+  header{
+    display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;
+    border-bottom:1px solid var(--black);
+    padding-bottom:16px;margin-bottom:24px;
+  }
+  h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-0.01em}
+  header p{margin:4px 0 0;font-size:12px;color:var(--gray-1)}
+  .status{font-size:11px;color:var(--gray-2);text-align:right;white-space:pre-line}
+
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap}
+  button{font-family:inherit}
+  .btn{
+    border:1px solid var(--black);background:var(--bg);color:var(--black);
+    padding:6px 12px;font-size:12px;cursor:pointer;
+  }
+  .btn:hover:not(:disabled){background:var(--black);color:var(--bg)}
+  .btn:disabled{opacity:.4;cursor:default}
+
+  .tabs{display:flex;gap:24px;border-bottom:1px solid var(--line);margin-bottom:20px}
+  .tab{
+    background:none;border:none;border-bottom:2px solid transparent;
+    padding:8px 0;font-size:14px;color:var(--gray-1);cursor:pointer;
+  }
+  .tab.active{color:var(--black);border-bottom-color:var(--black)}
+
+  .pills{display:flex;gap:6px;margin-bottom:16px}
+  .pill{
+    border:1px solid var(--black);background:var(--bg);color:var(--black);
+    padding:4px 10px;font-size:12px;cursor:pointer;
+  }
+  .pill.active{background:var(--black);color:var(--bg)}
+  .pill:disabled{opacity:.4;cursor:wait}
+
+  .banner{border:1px solid var(--black);padding:10px 12px;font-size:13px;margin-bottom:16px}
+  .banner.ok{color:var(--black)}
+  .banner.err{color:var(--black);border-style:dashed}
+
+  .empty{border:1px solid var(--line);padding:40px 20px;text-align:center;color:var(--gray-1);font-size:13px}
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{
+    text-align:left;font-weight:500;color:var(--gray-1);font-size:11px;
+    padding:6px 8px;border-bottom:1px solid var(--black);
+  }
+  td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr.top3 td{font-weight:600}
+  .rank-box{
+    display:inline-block;min-width:22px;text-align:center;
+    border:1px solid var(--black);font-size:11px;padding:1px 3px;
+  }
+  .player-cell{display:flex;align-items:center;gap:8px}
+  .avatar{
+    width:26px;height:26px;border:1px solid var(--black);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;
+  }
+  .name{font-weight:600;font-size:13px}
+  .pid{font-size:10px;color:var(--gray-2)}
+  .bar-track{background:var(--line);height:3px;margin-top:4px;width:100%}
+  .bar-fill{background:var(--black);height:3px}
+
+  .dist{margin-top:20px;border:1px solid var(--line);padding:14px}
+  .dist-label{font-size:11px;color:var(--gray-1);margin-bottom:8px}
+  .dist-bars{display:flex;gap:3px;align-items:flex-end;height:44px}
+  .dist-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .dist-bar{width:100%;background:var(--black)}
+  .dist-tick{font-size:8px;color:var(--gray-2);white-space:nowrap}
+
+  input,select{
+    width:100%;padding:8px;border:1px solid var(--black);background:var(--bg);
+    color:var(--black);font-size:13px;font-family:inherit;
+  }
+  label{display:block;font-size:11px;color:var(--gray-1);margin-bottom:4px}
+  .field{margin-bottom:12px}
+  .card{border:1px solid var(--black);padding:20px;max-width:420px}
+  .card h3{font-size:12px;margin:0 0 16px;color:var(--gray-1);font-weight:500}
+  .full{width:100%;padding:10px;margin-top:4px}
+
+  .quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .quick button{
+    border:1px solid var(--line);background:var(--bg);color:var(--gray-1);
+    padding:3px 8px;font-size:11px;cursor:pointer;
+  }
+  .quick button:hover{border-color:var(--black);color:var(--black)}
+
+  .stat-card{border:1px solid var(--black);padding:18px;max-width:480px}
+  .stat-head{display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:12px}
+  .stat-head .avatar{width:40px;height:40px;font-size:15px}
+  .lb-block{border:1px solid var(--line);padding:12px;margin-bottom:10px}
+  .lb-block-title{font-size:10px;color:var(--gray-1);margin-bottom:8px}
+  .lb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .lb-grid .k{font-size:9px;color:var(--gray-2)}
+  .lb-grid .v{font-weight:600;font-size:14px;margin-top:2px}
+  .pct-track{background:var(--line);height:3px;margin-top:8px}
+  .pct-fill{background:var(--black);height:3px}
+  .pct-note{font-size:10px;color:var(--gray-1);margin-top:4px}
+
+  .search-row{display:flex;gap:8px;margin-bottom:16px;max-width:480px}
+  .search-row input{flex:1}
+
+  footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--line);font-size:10px;color:var(--gray-2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+</style>
+</head>
+<body x-data="app()" x-init="init()">
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Leaderboard</h1>
+      <p>Player rankings, backed by a DynamoDB inverted-score index.</p>
+    </div>
+    <div>
+      <div class="status" x-show="ts && !loading" x-text="`${total} players &middot; top ${players.length} &middot; ${qms}ms\n${ts}`"></div>
+      <div class="status" x-show="loading">Loading...</div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn" @click="fetchBoard()" :disabled="loading">Refresh</button>
+        <button class="btn" @click="snapshot()" :disabled="snapshotting||loading" x-text="snapshotting?'Saving...':'Snapshot'"></button>
+        <button class="btn" @click="seed()" :disabled="seeding||loading" x-text="seeding?'Seeding...':'Seed data'"></button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <template x-for="[k,l] in [['board','Rankings'],['search','Player'],['submit','Submit']]">
+      <button class="tab" :class="tab===k?'active':''" @click="tab=k" x-text="l"></button>
+    </template>
+  </nav>
+
+  <!-- RANKINGS -->
+  <div x-show="tab==='board'">
+    <div class="pills">
+      <template x-for="[v,l] in [['all-time','All time'],['daily','Today'],['weekly','This week']]">
+        <button class="pill" :class="period===v?'active':''" @click="changePeriod(v)" :disabled="loading" x-text="l"></button>
+      </template>
+    </div>
+
+    <div class="banner" :class="loadErr.startsWith('Saved')||loadErr.startsWith('Generated')?'ok':'err'" x-show="loadErr" x-text="loadErr"></div>
+
+    <div class="empty" x-show="loading">Loading leaderboard...</div>
+    <div class="empty" x-show="!loading && players.length===0 && !loadErr">
+      No players found for this period.<br>Click "Seed data" to generate test players.
+    </div>
+
+    <table x-show="!loading && players.length>0">
+      <thead>
+        <tr><th>Rank</th><th>Player</th><th>Score</th><th>Country</th><th>Games</th></tr>
+      </thead>
+      <tbody>
+        <template x-for="(p,i) in players" :key="p.player_id+i">
+          <tr :class="i<3?'top3':''">
+            <td><span class="rank-box" x-text="p.rank"></span></td>
+            <td>
+              <div class="player-cell">
+                <div class="avatar" x-text="(p.display_name||'?')[0]"></div>
+                <div>
+                  <div class="name" x-text="p.display_name"></div>
+                  <div class="pid" x-text="p.player_id"></div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="num" x-text="p.score.toLocaleString()"></div>
+              <div class="bar-track"><div class="bar-fill" :style="`width:${Math.max((p.score/topScore)*100,4)}%`"></div></div>
+            </td>
+            <td x-text="p.country"></td>
+            <td class="num" x-text="p.games_played"></td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+
+    <div class="dist" x-show="!loading && players.length>0">
+      <div class="dist-label">Score distribution</div>
+      <div class="dist-bars">
+        <template x-for="(cnt,i) in dist" :key="i">
+          <div class="dist-col">
+            <div class="dist-bar" :style="`height:${Math.max((cnt/distMax)*36,cnt?2:0)}px`"></div>
+            <div class="dist-tick" x-text="['0-1k','1-2k','2-3k','3-4k','4-5k','5-6k','6-7k','7-8k','8-9k','9-10k'][i]"></div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYER SEARCH -->
+  <div x-show="tab==='search'">
+    <div class="search-row">
+      <input x-model="searchId" @keydown.enter="searchPlayer()" @input="searchErr='';pStats=null" placeholder="Enter player ID (e.g. blazemaster)">
+      <button class="btn" @click="searchPlayer()" :disabled="searching||!searchId.trim()" x-text="searching?'Searching...':'Search'"></button>
+    </div>
+
+    <div class="quick" x-show="players.length>0 && !searching">
+      <template x-for="p in players.slice(0,10)">
+        <button @click="searchId=p.player_id;searchErr='';pStats=null;searchPlayer()" x-text="p.display_name"></button>
+      </template>
+    </div>
+
+    <div class="empty" x-show="searching">Searching player...</div>
+    <div class="banner err" x-show="searchErr && !searching" x-text="searchErr"></div>
+
+    <div class="stat-card" x-show="pStats?.found && !searching">
+      <div class="stat-head">
+        <div class="avatar" x-text="(pStats?.display_name||'?')[0]"></div>
+        <div>
+          <div class="name" x-text="pStats?.display_name"></div>
+          <div class="pid" x-text="`${pStats?.country} &middot; ${pStats?.player_id}`"></div>
+        </div>
+      </div>
+      <template x-for="[lbId,s] in Object.entries(pStats?.leaderboards||{})">
+        <div class="lb-block">
+          <div class="lb-block-title" x-text="lbId"></div>
+          <div class="lb-grid">
+            <div><div class="k">Rank</div><div class="v" x-text="`#${s.rank}`"></div></div>
+            <div><div class="k">Score</div><div class="v num" x-text="s.score.toLocaleString()"></div></div>
+            <div><div class="k">Percentile</div><div class="v" x-text="`Top ${Math.max(100-parseFloat(s.percentile),0.1).toFixed(1)}%`"></div></div>
+            <div><div class="k">Games</div><div class="v num" x-text="s.games_played"></div></div>
+          </div>
+          <div class="pct-track"><div class="pct-fill" :style="`width:${parseFloat(s.percentile)}%`"></div></div>
+          <div class="pct-note" x-text="`Better than ${parseFloat(s.percentile)}% of ${s.total_players} players`"></div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div x-show="tab==='submit'">
+    <div class="card">
+      <h3>Submit score</h3>
+      <template x-for="[k,l,ph,t] in [['player_id','Player ID','e.g. shadowfox','text'],['display_name','Display name','e.g. ShadowFox','text'],['score','Score','e.g. 8500','number']]">
+        <div class="field">
+          <label x-text="l"></label>
+          <input x-model="form[k]" @input="submitRes=null" :placeholder="ph" :type="t" :disabled="busy">
+        </div>
+      </template>
+      <div class="field">
+        <label>Country</label>
+        <select x-model="form.country" :disabled="busy">
+          <template x-for="c in countries">
+            <option :value="c" x-text="c"></option>
+          </template>
+        </select>
+      </div>
+      <button class="btn full" @click="submitScore()" :disabled="busy||!form.player_id.trim()||!form.score" x-text="busy?'Submitting...':'Submit score'"></button>
+    </div>
+
+    <div class="banner ok" style="max-width:420px" x-show="submitRes && !submitRes.error">
+      <strong>Score submitted</strong>
+      <template x-for="u in submitRes?.updates||[]">
+        <div style="margin-top:6px;font-size:12px">
+          <span x-text="u.leaderboard+':'"></span> <span x-text="u.previous_score"></span> &rarr;
+          <strong x-text="u.new_score+(u.improved?' (improved)':'')"></strong>
+        </div>
+      </template>
+      <div style="margin-top:10px">
+        <button class="btn" @click="form={player_id:'',display_name:'',score:'',country:'US'};submitRes=null">Submit another</button>
+      </div>
+    </div>
+    <div class="banner err" style="max-width:420px" x-show="submitRes?.error" x-text="submitRes?.error"></div>
+  </div>
+
+  <footer>
+    <span>DynamoDB GSI &middot; inverted-score ranking pattern</span>
+    <span>PK: player_id &middot; SK: leaderboard_id &middot; GSI SK: inverted_score</span>
+  </footer>
+</div>
+
+<script>
+function app(){
+  return {
+    players:[],period:'all-time',total:0,qms:0,tab:'board',ts:null,loadErr:'',loading:false,
+    searchId:'',pStats:null,searchErr:'',searching:false,
+    form:{player_id:'',display_name:'',score:'',country:'US'},
+    submitRes:null,busy:false,seeding:false,snapshotting:false,refreshInterval:null,
+    countries:['US','KR','JP','DE','UK','BR','CA','AU','IN','FR','MX','SE','CN','RU','IT','ES','NL','PL'],
+    distCache:null,distMaxCache:null,
+
+    get demo(){return !window.CONFIG?.API_BASE || window.CONFIG.API_BASE.includes('__API_BASE__')},
+    get topScore(){return this.players[0]?.score||1},
+    get dist(){
+      if(!this.distCache){
+        const b=new Array(10).fill(0);
+        this.players.forEach(p=>b[Math.min(Math.floor(p.score/1000),9)]++);
+        this.distCache=b;
+        this.distMaxCache=Math.max(...b,1);
+      }
+      return this.distCache;
+    },
+    get distMax(){return this.distMaxCache||1},
+
+    async api(method,path,body){
+      const ctrl=new AbortController();
+      const timeout=setTimeout(()=>ctrl.abort(),10000);
+      try{
+        const opts={method,headers:{'Content-Type':'application/json'},signal:ctrl.signal};
+        if(body)opts.body=JSON.stringify(body);
+        const r=await fetch(window.CONFIG.API_BASE+path,opts);
+        clearTimeout(timeout);
+        const text=await r.text();
+        let data;
+        try{data=JSON.parse(text)}catch{throw new Error(text.slice(0,200))}
+        if(!r.ok)throw new Error(data.message||data.error||`HTTP ${r.status}`);
+        return data;
+      }catch(e){
+        clearTimeout(timeout);
+        if(e.name==='AbortError')throw new Error('Request timeout');
+        throw new Error(e.message||'Network error');
+      }
+    },
+
+    async fetchBoard(){
+      if(this.demo||this.loading)return;
+      this.loading=true;
+      this.distCache=null;
+      try{
+        this.loadErr='';
+        const d=await this.api('GET',`/leaderboard?period=${this.period}&limit=25`);
+        this.players=d.players||[];
+        this.total=d.total_players||0;
+        this.qms=d.query_time_ms||0;
+        this.ts=new Date().toLocaleTimeString();
+      }catch(e){
+        this.loadErr=e.message;
+        this.players=[];
+      }finally{
+        this.loading=false;
+      }
+    },
+
+    changePeriod(p){
+      if(p===this.period||this.loading)return;
+      this.period=p;
+      this.fetchBoard();
+    },
+
+    async searchPlayer(){
+      const pid=this.searchId.trim().toLowerCase();
+      if(!pid||this.searching)return;
+      this.searching=true;this.searchErr='';this.pStats=null;
+      try{
+        const data=await this.api('GET',`/player?player_id=${encodeURIComponent(pid)}`);
+        this.pStats=data;
+        if(data.found===false)this.searchErr=`Player "${pid}" not found. Try a name from the leaderboard.`;
+      }catch(e){
+        this.searchErr=`Search failed: ${e.message}`;
+      }finally{
+        this.searching=false;
+      }
+    },
+
+    async submitScore(){
+      const pid=this.form.player_id.trim().toLowerCase();
+      if(!pid||!this.form.score||isNaN(this.form.score)||this.busy)return;
+      this.busy=true;this.submitRes=null;
+      try{
+        const data=await this.api('POST','/scores',{
+          player_id:pid,
+          display_name:this.form.display_name.trim()||pid,
+          score:parseInt(this.form.score),
+          country:this.form.country,
+        });
+        this.submitRes=data;
+        setTimeout(()=>this.fetchBoard(),1500);
+      }catch(e){
+        this.submitRes={error:e.message};
+      }finally{
+        this.busy=false;
+      }
+    },
+
+    async seed(){
+      if(this.seeding||this.loading)return;
+      this.seeding=true;this.loadErr='';
+      try{
+        await this.api('POST','/simulate',{players:30});
+        this.loadErr='Generated 30 players across all periods';
+        setTimeout(()=>this.fetchBoard(),1500);
+        setTimeout(()=>this.loadErr='',4000);
+      }catch(e){
+        this.loadErr=`Seed failed: ${e.message}`;
+      }finally{
+        setTimeout(()=>this.seeding=false,2000);
+      }
+    },
+
+    async snapshot(){
+      if(this.snapshotting||this.loading)return;
+      this.snapshotting=true;this.loadErr='';
+      try{
+        const data=await this.api('POST','/snapshot',{leaderboard_id:this.period,top_n:50});
+        this.loadErr=`Saved snapshot: ${data.players_saved} players`;
+        setTimeout(()=>this.loadErr='',4000);
+      }catch(e){
+        this.loadErr=`Snapshot failed: ${e.message}`;
+      }finally{
+        setTimeout(()=>this.snapshotting=false,2000);
+      }
+    },
+
+    init(){
+      if(this.demo){
+        document.body.innerHTML=`<div class="wrap"><div class="card" style="max-width:480px;margin:80px auto"><h3>Configure API URL</h3><p style="font-size:13px;color:var(--gray-1);margin-bottom:12px">Edit <code>env.js</code> and set your API Gateway URL, then refresh this page.</p><pre style="font-size:11px;border:1px solid var(--line);padding:10px;overflow-x:auto">window.CONFIG = {\n  API_BASE: "https://YOUR-ID.execute-api.REGION.amazonaws.com/prod"\n};</pre></div></div>`;
+        return;
+      }
+      this.fetchBoard();
+      this.refreshInterval=setInterval(()=>!this.loading&&this.fetchBoard(),15000);
+    }
+  }
+}
+</script>
+</body>
+</html>
