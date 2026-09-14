@@ -15,7 +15,7 @@ resource "helm_release" "arc" {
 }
 
 resource "helm_release" "arc_runner_set" {
-  name             = "arc"
+  name             = "arc-runner-set"
   repository       = "oci://ghcr.io/actions/actions-runner-controller-charts"
   chart            = "gha-runner-scale-set"
   version          = "0.14.2"

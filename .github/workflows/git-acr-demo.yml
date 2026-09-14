@@ -1,0 +1,10 @@
+name: Actions Runner Controller Demo
+on:
+    workflow_dispatch:
+
+jobs:
+    Explore-GitHub-Actions:
+        # Same as the default runner, but uses a runner scale set instead of a single runner.
+        runs-on: arc-runner-set
+        steps:
+            - run: echo "🎉 This job uses runner scale set runners!"
