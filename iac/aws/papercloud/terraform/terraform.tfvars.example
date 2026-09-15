@@ -1,0 +1,5 @@
+aws_region       = "ap-southeast-1"
+environment      = "dev"
+project_name    = "papercloud"
+base_url         = ""
+paperless_image  = "ghcr.io/paperless-ngx/paperless-ngx:3.1.3"
