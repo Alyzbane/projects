@@ -22,9 +22,16 @@ resource "aws_dynamodb_table" "scores" {
   }
 
   global_secondary_index {
-    name            = "leaderboard-rank-index"
-    hash_key        = "leaderboard_id"
-    range_key       = "inverted_score"
+    name = "leaderboard-rank-index"
+    key_schema {
+      attribute_name = "leaderboard_id"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "inverted_score"
+      key_type       = "RANGE"
+    }
+
     projection_type = "ALL"
   }
 
