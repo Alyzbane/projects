@@ -1,12 +1,11 @@
 terraform {
-  required_version = ">= 1.11.1"
+  required_version = ">= 1.16.0"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "6.64.0"
     }
-
     random = {
       source  = "hashicorp/random"
       version = "3.7.2"
@@ -19,7 +18,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "papercloud"
+      Project     = var.project_name
       Environment = var.environment
       ManagedBy   = "terraform"
     }

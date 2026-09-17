@@ -1,71 +1,82 @@
+################################################################################
+# Deployment inputs
+################################################################################
+
 variable "aws_region" {
-  description = "AWS region for the deployment."
-  type        = string
-  default     = "ap-southeast-1"
+  type    = string
+  default = "ap-southeast-1"
 }
 
 variable "environment" {
-  description = "Environment name."
-  type        = string
-  default     = "dev"
+  type    = string
+  default = "prod"
 }
 
 variable "project_name" {
-  description = "Short project name used for resource naming."
+  type    = string
+  default = "papercloud"
+}
+
+variable "domain_name" {
+  description = "Public hostname used to access Paperless-ngx, e.g. paper.example.com."
   type        = string
-  default     = "papercloud"
+}
+
+variable "route53_zone_name" {
+  description = "Existing Route 53 public zone name. If null, Terraform creates a zone for domain_name."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "route53_zone_id" {
+  description = "Existing Route 53 public hosted zone ID. If null, Terraform creates a zone."
+  type        = string
+  default     = null
+  nullable    = true
 }
 
 variable "vpc_cidr" {
-  description = "CIDR block for the VPC."
-  type        = string
-  default     = "10.42.0.0/16"
-}
-
-variable "availability_zones" {
-  description = "Two AZs for the VPC."
-  type        = list(string)
-  default     = ["ap-southeast-1a", "ap-southeast-1b"]
+  type    = string
+  default = "10.42.0.0/16"
 }
 
 variable "ecs_cpu" {
-  description = "Fargate task CPU units."
-  type        = number
-  default     = 1024
+  type    = number
+  default = 2048
 }
 
 variable "ecs_memory" {
-  description = "Fargate task memory in MiB."
-  type        = number
-  default     = 2048
+  type    = number
+  default = 4096
 }
 
 variable "paperless_image" {
-  description = "Pinned Paperless-ngx image. Update intentionally when upgrading."
-  type        = string
-  default     = "ghcr.io/paperless-ngx/paperless-ngx:3.1.3"
+  type    = string
+  default = "ghcr.io/paperless-ngx/paperless-ngx:3.1.3"
 }
 
 variable "paperless_timezone" {
-  description = "Paperless timezone."
-  type        = string
-  default     = "Asia/Manila"
+  type    = string
+  default = "Asia/Manila"
 }
 
 variable "database_instance_class" {
-  description = "RDS PostgreSQL instance class."
-  type        = string
-  default     = "db.t4g.micro"
+  type    = string
+  default = "db.t4g.micro"
 }
 
 variable "database_allocated_storage" {
-  description = "RDS storage in GiB."
-  type        = number
-  default     = 20
+  type    = number
+  default = 20
 }
 
-variable "base_url" {
-  description = "Public base URL. Leave empty to use the ALB HTTP URL."
-  type        = string
-  default     = ""
+
+# ========================================
+#    Whitelisted IPs for ALB
+# ========================================
+
+variable "admin_allowed_cidrs" {
+  description = "CIDR ranges allowed to access restricted application paths."
+  type        = list(string)
 }

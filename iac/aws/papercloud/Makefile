@@ -1,23 +1,26 @@
-TF := terraform
-TF_DIR := terraform
+TF := terraform -chdir=terraform
 
 init:
-	$(TF) -chdir=$(TF_DIR) init
+	$(TF) init -var-file=terraform.tfvars
 
 fmt:
-	$(TF) -chdir=$(TF_DIR) fmt
+	$(TF) fmt -recursive
 
 validate:
-	$(TF) -chdir=$(TF_DIR) validate
+	$(TF) validate
 
 plan:
-	$(TF) -chdir=$(TF_DIR) plan
+	$(TF) plan -var-file=terraform.tfvars
+
+dns-zone:
+	$(TF) apply -target=aws_route53_zone.this -var-file=terraform.tfvars -auto-approve
+	$(TF) output route53_name_servers
 
 apply:
-	$(TF) -chdir=$(TF_DIR) apply -auto-approve
+	$(TF) apply -var-file=terraform.tfvars -auto-approve
 
 destroy:
-	$(TF) -chdir=$(TF_DIR) destroy -auto-approve
+	$(TF) destroy -var-file=terraform.tfvars -auto-approve
 
 output:
-	$(TF) -chdir=$(TF_DIR) output
+	$(TF) output

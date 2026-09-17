@@ -1,5 +1,16 @@
-aws_region       = "ap-southeast-1"
-environment      = "dev"
-project_name    = "papercloud"
-base_url         = ""
-paperless_image  = "ghcr.io/paperless-ngx/paperless-ngx:3.1.3"
+aws_region         = "ap-southeast-1"
+environment        = "prod"
+project_name       = "papercloud"
+
+domain_name       = "paper.example.com"
+
+# Leave route53_zone_id null to have Terraform create a hosted zone for domain_name.
+# If your domain already uses Route 53, set the existing zone ID instead.
+route53_zone_id   = null
+route53_zone_name = null
+
+# CIDR ranges allowed to access protected Paperless paths.
+admin_allowed_cidrs = [
+	"203.0.113.10/32",
+]
+
