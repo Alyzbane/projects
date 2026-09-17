@@ -33,11 +33,15 @@ final_snapshot_identifier = "papercloud-final"
 
 With `deletion_protection = true`, an intentional destroy requires changing the setting back to `false` and applying that change first. A final snapshot should also be retained according to the project's backup and retention requirements.
 
-### Public ECS subnets
+### Private ECS subnets and one NAT Gateway
 
-The ECS task runs in public subnets with a public IP address. NAT Gateway is disabled to reduce the cost and complexity of this demo. The ECS security group accepts application traffic only from the ALB security group, but the task still has public network placement.
+The ECS task runs in private subnets with no public IP address. A single NAT Gateway is shared by the private subnets so the task can reach external HTTPS services, pull images, and contact AWS services without being directly reachable from the internet.
 
-For production, consider private ECS subnets with NAT Gateway or VPC endpoints, stronger egress controls, and a more highly available service configuration.
+Using one NAT Gateway reduces cost compared with one per Availability Zone, but it is not fully highly available. A production environment with stronger availability requirements should use one NAT Gateway per Availability Zone.
+
+### ALB to ECS traffic
+
+The ALB security group allows outbound TCP traffic only on port `8000`, and the rule references the ECS task security group. The ECS service uses `module.ecs_sg.id` for its task security group, so the ALB can reach the Paperless container without allowing unrestricted outbound traffic.
 
 ### ALB deletion protection
 

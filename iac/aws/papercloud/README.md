@@ -4,7 +4,7 @@
 
 PaperCloud deploys a small Paperless-ngx installation on AWS using Terraform. The application runs on Amazon ECS Fargate behind an HTTPS Application Load Balancer, with PostgreSQL on Amazon RDS, persistent files on Amazon EFS, and supporting services running as ECS sidecars.
 
-This configuration is intended as a cost-conscious personal or demonstration deployment. The ECS task uses public subnets and public IP addressing because NAT Gateway is intentionally omitted. Review the security, availability, backup, and cost settings before using it for production workloads.
+This configuration is intended as a cost-conscious personal or demonstration deployment. The ECS task runs in private subnets without a public IP, using one shared NAT Gateway for outbound access. Review the security, availability, backup, and cost settings before using it for production workloads.
 
 ## Goals
 
@@ -30,21 +30,22 @@ ACM certificate ──► HTTPS Application Load Balancer
 VPC
 	├── Public subnets
 	│     ├── Application Load Balancer
-	│     └── ECS Fargate task
-	│           ├── Paperless-ngx
-	│           ├── Valkey
-	│           ├── Apache Tika
-	│           └── Gotenberg
+	│     └── One NAT Gateway
 	└── Private subnets
-				├── RDS PostgreSQL 17
-				└── EFS mount targets
+	      ├── ECS Fargate task
+	      │     ├── Paperless-ngx
+	      │     ├── Valkey
+	      │     ├── Apache Tika
+	      │     └── Gotenberg
+	      ├── RDS PostgreSQL 17
+	      └── EFS mount targets
 
 Secrets Manager
 	├── RDS master-user secret managed by RDS
 	└── Paperless secret key
 ```
 
-The deployment uses two Availability Zones, disables NAT Gateway, and enables ECS deployment rollback through the deployment circuit breaker.
+The deployment uses two Availability Zones, one shared NAT Gateway, and enables ECS deployment rollback through the deployment circuit breaker.
 
 ## Repo Structure
 

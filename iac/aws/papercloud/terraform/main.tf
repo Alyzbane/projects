@@ -17,7 +17,10 @@ module "vpc" {
   public_subnets  = ["10.42.0.0/20", "10.42.16.0/20"]
   private_subnets = ["10.42.128.0/20", "10.42.144.0/20"]
 
-  enable_nat_gateway = false
+  # One NAT Gateway provides outbound access for the private ECS subnets.
+  # This is cheaper than one NAT Gateway per AZ, but less highly available.
+  enable_nat_gateway = true
+  single_nat_gateway = true
   enable_vpn_gateway = false
 
   enable_dns_hostnames = true
@@ -109,9 +112,11 @@ module "alb" {
   }
 
   security_group_egress_rules = {
-    all = {
-      ip_protocol = "-1"
-      cidr_ipv4   = "0.0.0.0/0"
+    ecs = {
+      from_port                    = 8000
+      to_port                      = 8000
+      ip_protocol                  = "tcp"
+      referenced_security_group_id = module.ecs_sg.id
     }
   }
 
@@ -158,7 +163,6 @@ module "alb" {
 
       # Protected paths are forwarded only for approved source CIDRs.
       rules = {
-        # Allow access to restricted paths only from whitelisted IPs, otherwise return 403.
         admin-api-allowed = {
           priority = 10
           actions = [{
@@ -454,10 +458,15 @@ module "ecs_service" {
   cpu    = var.ecs_cpu
   memory = var.ecs_memory
 
-  launch_type                   = "FARGATE"
-  desired_count                 = 1
-  assign_public_ip              = true
-  subnet_ids                    = module.vpc.public_subnets
+  launch_type   = "FARGATE"
+  desired_count = 1
+
+  # Keep the ECS task private 
+  # the NAT Gateway provides outbound internet access.
+  assign_public_ip = false
+
+  subnet_ids                    = module.vpc.private_subnets
+  create_security_group         = false
   security_group_ids            = [module.ecs_sg.id]
   availability_zone_rebalancing = "DISABLED"
 

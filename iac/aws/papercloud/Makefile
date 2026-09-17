@@ -14,7 +14,6 @@ plan:
 
 dns-zone:
 	$(TF) apply -target=aws_route53_zone.this -var-file=terraform.tfvars -auto-approve
-	$(TF) output route53_name_servers
 
 apply:
 	$(TF) apply -var-file=terraform.tfvars -auto-approve
